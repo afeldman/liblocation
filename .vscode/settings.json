@@ -1,0 +1,9 @@
+{
+  "editor.insertSpaces": true,
+  "ruby.rubocop.onSave": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveTimeout": 5000,
+  "files.associations": {
+    "*.erb": "erb"
+  },
+}

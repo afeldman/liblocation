@@ -18,34 +18,50 @@ module LibLocation
 
     private_class_method :new
 
-    def initialize(config_file)
+    def initialize(host = nil, _version = nil, _verify = nil, _debug = nil)
       @config = Config.new
-      return unless config_file.nil? || File.exist?(config_file)
 
-      content = File.read(config_file)
-
-      case File.extname(config_file).downcase
-      when ".tml", ".toml"
-        @config = Config.from_toml(content)
-      when ".yml", ".yaml"
-        @config = Config.from_yaml(content)
-      when ".json"
-        @config = Config.from_json(content)
-      when ".xml"
-        @config = Config.from_xml(content)
-      else
-        @config
-      end
+      @config.host = host unless host.nil?
+      @config.version = version unless version.nil?
+      @config.verify = verify unless verify.nil?
+      @config.debug = debug unless debug.nil?
     end
 
-    def self.instance(config_file)
-      return @instance if @instance
+    class << self
+      def instance(host = nil, version = nil, verify = nil, debug = nil)
+        return @instance if @instance
 
-      @instance_mutex.synchronize do
-        @instance ||= new(config_file)
+        @instance_mutex.synchronize do
+          @instance ||= new(host: host, version: version, verify: verify, debug: debug)
+        end
+
+        @instance
       end
 
-      @instance
+      def from_file(config_file = nil)
+        config = LocationConfig.instance
+        if !config_file.nil? && File.exist?(config_file)
+
+          content = File.read(config_file)
+          info = nil
+
+          case File.extname(config_file).downcase
+          when ".tml", ".toml"
+            info = Config.from_toml(content)
+          when ".yml", ".yaml"
+            info = Config.from_yaml(content)
+          when ".json"
+            info = Config.from_json(content)
+          when ".xml"
+            info = Config.from_xml(content)
+          else
+            info
+          end
+          config.config = info
+        end
+
+        config
+      end
     end
 
     def to_toml

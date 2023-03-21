@@ -12,9 +12,6 @@ module LibLocation
                LibLocation::LocationConfig.instance(host, version, verify, debug)
              end
 
-    p config
-    p geo_point
-
     LibLocation::LocationServer.geo2address(config, geo_point)
   end
 

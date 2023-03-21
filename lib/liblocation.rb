@@ -1,17 +1,32 @@
 # frozen_string_literal: true
 
 require_relative "liblocation/version"
+require_relative "liblocation/config"
+require_relative "liblocation/server"
 
 module LibLocation
-  def phone_informations(phonenumber, country = "DE", config_file = nil, host = nil, verify = nil)
-    c = ISO3166::Country.find_country_by_alpha2(country) unless country.nil?
+  def geo2address(geo_point, config_file = nil, host = nil, version = nil, verify = true, debug = false)
+    config = if !config_file.nil?
+               LibLocation::LocationConfig.from_file(config_file) if File.exist?(config_file)
+             else
+               LibLocation::LocationConfig.instance(host, version, verify, debug)
+             end
 
-    phonenumber = if !c.nil? && phonenumber.start_with?("0")
-                    "+#{c.country_code}#{phonenumber[1..]}"
-                  else
-                    phonenumber
-                  end
+    p config
+    p geo_point
 
-    LibPhone::Phone.phone(phonenumber, config_file, host, verify)
+    LibLocation::LocationServer.geo2address(config, geo_point)
   end
+
+  def address2geo(address, config_file = nil, host = nil, version = nil, verify = true, debug = false)
+    config = if !config_file.nil?
+               LibLocation::LocationConfig.from_file(config_file) if File.exist?(config_file)
+             else
+               LibLocation::LocationConfig.instance(host, version, verify, debug)
+             end
+
+    LibLocation::LocationServer.address2geo(config, address)
+  end
+
+  module_function :geo2address, :address2geo
 end

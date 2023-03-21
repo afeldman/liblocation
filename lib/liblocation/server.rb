@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'json'
+require "json"
 require "httparty"
 require "shale"
 
@@ -26,26 +26,24 @@ module LibLocation
 
     class Geo < Shale::Mapper
       attribute :type, Shale::Type::String, default: -> { "Point" }
-	  attribute :coordinates, Shale::Type::Float, collection: true
+      attribute :coordinates, Shale::Type::Float, collection: true
     end
 
     class << self
-      def geo2address(config_file, geo_points)
-        config = LibLocation::LocationConfig.instance(config_file)
-
+      def geo2address(config, geo_point)
         res = nil
+        p geo_point
         begin
-            options = { 
-                :headers => { 
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json', },
-                :body => geo_points.to_json,
-                :verify => config.config.verify
-            }
+          options = {
+            headers: {
+              "Content-Type" => "application/json",
+              "Accept" => "application/json"
+            },
+            body: geo_point,
+            verify: config.config.verify
+          }
 
-            if config.config.debug
-             options[:debug_output] = $stdout 
-            end
+          options[:debug_output] = $stdout if config.config.debug
           res = HTTParty.post(
             "#{config.config.host}/#{config.config.version}/geo2address",
             options
@@ -54,36 +52,24 @@ module LibLocation
           puts e.message
         end
 
-        unless res.body.nil? || res.body.empty? && res.code != 200
-            responce = Array.new()
-            JSON::parse(res.body.force_encoding('utf-8')).each { |object|
-             unless object.nil?
-                 responce << Geo.from_hash(object)
-             else
-                 responce << nil
-             end 
-            }
-        else
-           nil
-        end
+        return if res.body.nil? || res.body.empty? && res.code != 200
+
+        Geo.from_hash(JSON.parse(res.body.force_encoding("utf-8")))
       end
 
-      def address2geo(config_file, addresses)
-        config = LibLocation::LocationConfig.instance(config_file)
-
+      def address2geo(config, address)
         res = nil
         begin
-            options = { 
-                :headers => { 
-                    'Content-Type' => 'application/json',
-                    'Accept' => 'application/json', },
-                :body => addresses.to_json,
-                :verify => config.config.verify
-            }
+          options = {
+            headers: {
+              "Content-Type" => "application/json",
+              "Accept" => "application/json"
+            },
+            body: address,
+            verify: config.config.verify
+          }
 
-            if config.config.debug
-             options[:debug_output] = $stdout 
-            end
+          options[:debug_output] = $stdout if config.config.debug
           res = HTTParty.post(
             "#{config.config.host}/#{config.config.version}/address2geo",
             options
@@ -92,18 +78,9 @@ module LibLocation
           puts e.message
         end
 
-        unless res.body.nil? || res.body.empty? && res.code != 200
-            responce = Array.new()
-           JSON::parse(res.body.force_encoding('utf-8')).each { |object|
-            unless object.nil?
-                responce << Address.from_hash(object)
-            else
-                responce << nil
-            end 
-           }
-        else
-            nil
-        end
+        return if res.body.nil? || res.body.empty? && res.code != 200
+
+        Geo.from_hash(JSON.parse(res.body.force_encoding("utf-8")))
       end
     end
   end

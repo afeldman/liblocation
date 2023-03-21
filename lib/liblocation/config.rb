@@ -12,13 +12,13 @@ module LibLocation
       attribute :debug, Shale::Type::Boolean, default: -> { false }
     end
 
-    attr_reader :config
+    attr_reader :config, :instance
 
     @instance_mutex = Mutex.new
 
     private_class_method :new
 
-    def initialize(host = nil, _version = nil, _verify = nil, _debug = nil)
+    def initialize(host = nil, version = nil, verify = nil, debug = nil)
       @config = Config.new
 
       @config.host = host unless host.nil?
@@ -28,11 +28,14 @@ module LibLocation
     end
 
     class << self
-      def instance(host = nil, version = nil, verify = nil, debug = nil)
+      def instance(host = nil,
+                   version = nil,
+                   verify = nil,
+                   debug = nil)
         return @instance if @instance
 
         @instance_mutex.synchronize do
-          @instance ||= new(host: host, version: version, verify: verify, debug: debug)
+          @instance ||= new(host, version, verify, debug)
         end
 
         @instance
@@ -62,7 +65,7 @@ module LibLocation
 
         config
       end
-    end
+  end
 
     def to_toml
       Shale.toml_adapter = Tomlib
